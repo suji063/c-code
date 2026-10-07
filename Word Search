@@ -1,0 +1,78 @@
+#include <stdbool.h>
+#include <string.h>
+
+static bool dfs(char** board, int m, int n, int r, int c, const char* word, int k) {
+    if (word[k] == '\0') {
+        return true;
+    }
+
+    // Boundary check and character match check
+    if (r < 0 || r >= m || c < 0 || c >= n || board[r][c] != word[k]) {
+        return false;
+    }
+
+    // Mark current cell as visited
+    char temp = board[r][c];
+    board[r][c] = '#';
+
+    // Explore four cardinal directions
+    bool found = dfs(board, m, n, r + 1, c, word, k + 1) ||
+                 dfs(board, m, n, r - 1, c, word, k + 1) ||
+                 dfs(board, m, n, r, c + 1, word, k + 1) ||
+                 dfs(board, m, n, r, c - 1, word, k + 1);
+
+    // Backtrack and restore original state
+    board[r][c] = temp;
+
+    return found;
+}
+
+bool exist(char** board, int boardSize, int* boardColSize, char* word) {
+    int m = boardSize;
+    int n = boardColSize[0];
+    int wordLen = strlen(word);
+
+    // Basic length prune
+    if (wordLen > m * n) {
+        return false;
+    }
+
+    // Frequency pruning
+    int boardCounts[128] = {0};
+    int wordCounts[128] = {0};
+
+    for (int i = 0; i < m; ++i) {
+        for (int j = 0; j < n; ++j) {
+            boardCounts[(unsigned char)board[i][j]]++;
+        }
+    }
+
+    for (int i = 0; i < wordLen; ++i) {
+        wordCounts[(unsigned char)word[i]]++;
+        if (wordCounts[(unsigned char)word[i]] > boardCounts[(unsigned char)word[i]]) {
+            return false;
+        }
+    }
+
+    // If word's tail is rarer than its head, reverse the word to prune branches earlier
+    char searchWord[wordLen + 1];
+    strcpy(searchWord, word);
+    if (boardCounts[(unsigned char)word[wordLen - 1]] < boardCounts[(unsigned char)word[0]]) {
+        for (int i = 0; i < wordLen / 2; ++i) {
+            char t = searchWord[i];
+            searchWord[i] = searchWord[wordLen - 1 - i];
+            searchWord[wordLen - 1 - i] = t;
+        }
+    }
+
+    // Start DFS from any matching cell
+    for (int i = 0; i < m; ++i) {
+        for (int j = 0; j < n; ++j) {
+            if (board[i][j] == searchWord[0] && dfs(board, m, n, i, j, searchWord, 0)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
