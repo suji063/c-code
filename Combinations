@@ -1,0 +1,50 @@
+#include <stdlib.h>
+
+// Helper to compute nCr (combinations count) to pre-allocate memory
+static int nCr(int n, int r) {
+    if (r < 0 || r > n) return 0;
+    if (r == 0 || r == n) return 1;
+    if (r > n / 2) r = n - r;
+    long long res = 1;
+    for (int i = 1; i <= r; ++i) {
+        res = res * (n - i + 1) / i;
+    }
+    return (int)res;
+}
+
+static void backtrack(int start, int n, int k, int* path, int pathLen,
+                      int** result, int* returnSize) {
+    // Base case: combination of size k is formed
+    if (pathLen == k) {
+        result[*returnSize] = (int*)malloc(k * sizeof(int));
+        for (int i = 0; i < k; ++i) {
+            result[*returnSize][i] = path[i];
+        }
+        (*returnSize)++;
+        return;
+    }
+
+    // Pruning: stop when remaining available numbers are fewer than needed
+    int need = k - pathLen;
+    for (int i = start; i <= n - need + 1; ++i) {
+        path[pathLen] = i;
+        backtrack(i + 1, n, k, path, pathLen + 1, result, returnSize);
+    }
+}
+
+int** combine(int n, int k, int* returnSize, int** returnColumnSizes) {
+    int total = nCr(n, k);
+    *returnSize = 0;
+
+    int** result = (int**)malloc(total * sizeof(int*));
+    *returnColumnSizes = (int*)malloc(total * sizeof(int));
+    for (int i = 0; i < total; ++i) {
+        (*returnColumnSizes)[i] = k;
+    }
+
+    int* path = (int*)malloc(k * sizeof(int));
+    backtrack(1, n, k, path, 0, result, returnSize);
+
+    free(path);
+    return result;
+}
