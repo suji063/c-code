@@ -1,0 +1,17 @@
+int removeDuplicates(int* nums, int numsSize) {
+    if (numsSize <= 2) {
+        return numsSize;
+    }
+
+    int k = 2; // Pointer to write the next valid element
+
+    for (int i = 2; i < numsSize; ++i) {
+        // Only write if current element differs from the one two positions back
+        if (nums[i] != nums[k - 2]) {
+            nums[k] = nums[i];
+            k++;
+        }
+    }
+
+    return k;
+}
